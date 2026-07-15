@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGE - Estoqly</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="./logo.png" class="logo-sistema" alt="Logo Estoqly">
+                <h2>SGE Estoqly</h2>
+                <p>Autenticação do Sistema</p>
+            </div>
+            
+            <form id="login-form" onsubmit="executeLogin(event)">
+                <div class="form-group">
+                    <label for="login-username">Usuário</label>
+                    <input type="text" id="login-username" class="form-control" placeholder="Digite seu usuário" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Senha</label>
+                    <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" id="btn-submit" class="btn">Acessar Sistema</button>
+            </form>
+
+            <div class="login-footer">
+                <p>Ainda não faz parte? <a href="https://sge-estoqly.github.io/SGE-Estoqly-Planos/" target="_blank" rel="noopener noreferrer">Conheça nossos Planos</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+        <script>
+        async function executeLogin(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('login-username').value;
+            const passwordInput = document.getElementById('login-password').value;
+            const btnSubmit = document.getElementById('btn-submit');
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "Conectando ao SGE Estoqly...";
+
+            const result = await db.call({
+                action: "login",
+                username: usernameInput,
+                password: passwordInput
+            });
+
+            if (result && result.success) {
+                // Guarda os dados de sessão e o ponteiro do banco de dados do usuário
+                localStorage.setItem('sge_session', result.nome);
+                localStorage.setItem('sge_perfil', result.perfil);
+                localStorage.setItem('sge_spreadsheet_id', result.spreadsheetId);
+                
+                // 🔥 NOVO: Salva o status do plano (Ativo/Inativo) enviado pelo Apps Script
+                localStorage.setItem('sge_plano_status', result.plano); 
+                
+                window.location.href = 'dashboard.html';
+            } else {
+                alert(result ? result.message : "Erro ao contatar servidor SGE Estoqly.");
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = "Acessar Sistema";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,564 @@
+:root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-accent: #334155;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-color: #3b82f6;
+    --accent-hover: #2563eb;
+    --success: #10b981;
+    --danger: #ef4444;
+    --sidebar-width: 260px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+}
+
+/* --- TELA DE LOGIN --- */
+#login-container {
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-card {
+    background-color: var(--bg-secondary);
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--bg-accent);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-header i {
+    font-size: 3rem;
+    color: var(--accent-color);
+    margin-bottom: 0.5rem;
+}
+/* --- ESTILIZAÇÃO DA LOGO DA EMPRESA --- */
+
+/* --- AJUSTE DE TAMANHO DA LOGO --- */
+
+/* 1. Na Tela de Login (Estava 60px, aumentamos para 100px) */
+.login-header .logo-sistema {
+    height: 150px;         /* Ajuste esse valor (ex: 110px, 120px) até achar o tamanho ideal */
+    width: auto;
+    margin-bottom: 1.25rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;    /* Mantém centralizada */
+}
+
+/* 2. No Topo do Sidebar (Estava 28px, aumentamos para 38px) */
+.sidebar-brand .logo-sistema {
+    height: 32px;          /* Ajuste aqui se também quiser ela maior na barra lateral */
+    width: auto;
+    object-fit: contain;
+    display: inline-block;
+    vertical-align: middle;
+}
+/* --- ESTRUTURA PRINCIPAL --- */
+#app-container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+}
+
+/* Sidebar */
+sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--bg-secondary);
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    border-right: 1px solid var(--bg-accent);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-brand {
+    padding: 1.25rem 1.5rem;
+    font-size: 1.25rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--bg-accent);
+    color: var(--accent-color);
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0.5rem 0;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 60px); /* Garante o alinhamento do bloco de baixo */
+}
+
+.sidebar-item a {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.sidebar-item a:hover, .sidebar-item.active a {
+    color: var(--text-main);
+    background-color: var(--bg-accent);
+    border-left: 4px solid var(--accent-color);
+}
+
+/* --- ESTILIZAÇÃO DO BOTÃO MEU PLANO (ADICIONADO) --- */
+/* 1. Empurra o bloco inteiro para a parte inferior do sidebar */
+.sidebar-footer {
+    margin-top: auto; 
+    border-top: 1px solid var(--bg-accent); /* Linha divisória acima do Meu Plano */
+}
+
+/* 2. Estilização do link "Meu Plano" (como ele é a própria tag <a>) */
+a.sidebar-item.plano-premium {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.sidebar-status-plano {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    margin: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* Cores dinâmicas para o status */
+.status-ativo {
+    color: #10b981 !important; /* Verde Esmeralda */
+}
+
+.status-inativo {
+    color: #ef4444 !important; /* Vermelho */
+}
+/* 1. Reduz a margem inferior da logo */
+.login-header .logo-sistema {
+    /* Mantenha o seu height atual (ex: 100px) e apenas mude/adicione a margem abaixo: */
+    margin-bottom: 0.0rem !important; 
+}
+
+/* 2. Zera a margem superior do título para colar na logo */
+.login-header h2 {
+    margin-top: 0.0rem !important;   /* Controla o espaço exato entre a logo e o texto */
+    margin-bottom: 0.5rem;             /* Mantém o espaço para a frase de baixo */
+}
+/* 3. Estilização do Botão Sair (onde a tag <a> está dentro da div) */
+.logout-btn {
+    border-top: 1px solid var(--bg-accent); /* Linha divisória entre os dois botões */
+}
+
+.logout-btn a {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.logout-btn a:hover {
+    color: var(--text-main);
+    background-color: var(--bg-accent);
+    border-left: 4px solid var(--accent-color);
+    padding-left: calc(1.5rem - 4px);
+}
+
+/* Conteúdo Principal */
+main {
+    margin-left: var(--sidebar-width);
+    padding: 1.25rem; /* Reduzido de 2rem para 1.25rem (Aproxima os elementos das bordas) */
+    width: calc(100% - var(--sidebar-width));
+}
+
+h2 {
+    margin-bottom: 1rem; /* Reduzido de 1.5rem */
+    font-size: 1.6rem;
+    border-bottom: 2px solid var(--bg-accent);
+    padding-bottom: 0.4rem;
+}
+
+/* --- COMPONENTES DE FORMULÁRIO --- */
+.form-group {
+    margin-bottom: 1rem; /* Reduzido de 1.25rem (Inputs mais próximos) */
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.4rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.65rem 0.75rem; /* Mais compacto verticalmente */
+    background-color: var(--bg-primary);
+    border: 1px solid var(--bg-accent);
+    border-radius: 6px;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.btn {
+    background-color: var(--accent-color);
+    color: var(--text-main);
+    padding: 0.65rem 1.5rem; /* Botões mais compactos */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: var(--accent-hover);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem; /* Reduzido o espaço entre inputs do grid de 1.5rem para 1rem */
+    background-color: var(--bg-secondary);
+    padding: 1.25rem; /* Caixa de formulário menos gigante */
+    border-radius: 8px;
+    border: 1px solid var(--bg-accent);
+}
+
+.form-footer {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.75rem;
+}
+
+.form-footer .btn {
+    width: auto;
+    min-width: 150px;
+}
+
+/* --- DASHBOARD --- */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem; /* Cards de métricas mais próximos */
+    margin-bottom: 1.25rem; /* Distância menor para o próximo elemento */
+}
+
+.metric-card {
+    background-color: var(--bg-secondary);
+    padding: 1.1rem 1.25rem; /* Padding interno menor */
+    border-radius: 8px;
+    border: 1px solid var(--bg-accent);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.metric-info h3 {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.metric-info p {
+    font-size: 1.5rem; /* Leve redução para equilibrar com o tamanho do card */
+    font-weight: bold;
+}
+
+.metric-icon {
+    font-size: 2.2rem;
+    opacity: 0.3;
+}
+
+.chart-container {
+    background-color: var(--bg-secondary);
+    padding: 1.25rem;
+    border-radius: 8px;
+    border: 1px solid var(--bg-accent);
+    margin-top: 1rem; /* Aproxima o gráfico dos cards acima */
+    height: 320px; /* Reduzido sutilmente a altura */
+}
+
+/* --- TABELAS --- */
+.table-container {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--bg-accent);
+    overflow-x: auto;
+    margin-top: 1rem; /* Menor espaçamento superior */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+th, td {
+    padding: 0.75rem 1rem; /* Linhas mais compactas verticalmente (de 1rem para 0.75rem) */
+    border-bottom: 1px solid var(--bg-accent);
+}
+
+th {
+    background-color: rgba(0,0,0,0.2);
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+.badge {
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+/* Estilo do Modal de Bloqueio */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.8); /* Slate escuro com opacidade */
+    backdrop-filter: blur(8px); /* Efeito blur moderno no fundo */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999; /* Fica acima de absolutamente tudo */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+/* Classe que ativa a exibição do modal */
+.modal-overlay.mostrar {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-container {
+    background: #1e293b; /* Fundo slate escuro premium */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 35px 30px;
+    border-radius: 16px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    transform: scale(0.85);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Animação de zoom-in ao abrir */
+.modal-overlay.mostrar .modal-container {
+    transform: scale(1);
+}
+
+.modal-icon {
+    width: 65px;
+    height: 65px;
+    background: rgba(239, 68, 68, 0.12); /* Círculo vermelho suave */
+    color: #ef4444; /* Ícone vermelho de aviso */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin: 0 auto 22px auto;
+}
+
+.modal-container h2 {
+    color: #ffffff;
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+    font-weight: 600;
+    font-family: sans-serif;
+}
+
+.modal-container p {
+    color: #94a3b8; /* Cor cinza suave para leitura */
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 26px;
+    font-family: sans-serif;
+}
+
+.modal-btn {
+    background: #ef4444; /* Botão vermelho moderno */
+    color: #ffffff;
+    border: none;
+    padding: 13px 24px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    width: 100%;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+/* Container Centralizado */
+#login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f4f7f6; /* Cor de fundo leve */
+}
+
+/* O Card de Login */
+.login-card {
+    background: #ffffff;
+    padding: 1.5rem 2rem; /* Reduzimos o padding vertical */
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 380px; /* Card um pouco mais estreito */
+}
+
+/* 2. Cabeçalho com menos espaço entre Logo e Título */
+.login-header {
+    text-align: center;
+    margin-bottom: 1rem; /* Reduzimos de 2rem para 1rem */
+}
+
+.logo-sistema {
+    max-width: 150px; /* Ajuste o tamanho da logo se necessário */
+    margin-bottom: 0.25rem; /* Ajuste fino do espaço logo-texto */
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.login-header h2 {
+    margin: 0; /* Remove margens extras do h2 */
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.login-header p {
+    color: var(--text-muted, #888);
+    font-size: 0.9rem;
+}
+
+/* 3. Ajuste nos inputs para diminuir a altura total */
+.form-group {
+    margin-bottom: 1rem; /* Reduzimos de 1.5rem para 1rem */
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box; /* Garante que o padding não quebre o tamanho */
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    border-color: #007bff; /* Ajuste para a cor do seu sistema */
+    outline: none;
+}
+
+/* Botão Moderno */
+.btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+/* Estilo do Rodapé do Link */
+.login-footer {
+    margin-top: 1.5rem;
+    text-align: center;
+    border-top: 1px solid #eee;
+    padding-top: 1rem;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.login-footer a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+
+.modal-btn:hover {
+    background: #dc2626;
+}
+
+.modal-btn:active {
+    transform: scale(0.98);
+}
+.badge-success { background-color: rgba(16, 185, 129, 0.2); color: var(--success); }
+.badge-danger { background-color: rgba(239, 68, 68, 0.2); color: var(--danger); }

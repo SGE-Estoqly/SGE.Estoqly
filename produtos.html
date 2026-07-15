@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGE - Consultar Produtos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* --- ESTILOS DO PAINEL DE FILTROS POR SELEÇÃO --- */
+        .filters-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            background: #1e293b;
+            padding: 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #334155;
+        }
+
+        /* --- ESTILIZAÇÃO DO MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: #1e293b; border: 1px solid #334155; padding: 2rem;
+            border-radius: 12px; width: 90%; max-width: 450px; text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9); transition: transform 0.3s ease; color: #f8fafc;
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .modal-icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+        .modal-icon.danger { color: #ef4444; }
+        .modal-icon.success { color: #10b981; }
+        .modal-btn {
+            padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 500; cursor: pointer;
+            border: none; border-radius: 6px; color: white; width: 100%;
+            background-color: #3b82f6; transition: background 0.2s; margin-top: 1.5rem;
+        }
+        .modal-btn:hover { background-color: #2563eb; }
+
+        /* Estilo específico do botão de exclusão na tabela */
+        .btn-delete {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.4rem;
+            border-radius: 4px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <sidebar>
+            <div class="sidebar-brand">
+                <img src="logo.png" class="logo-sistema" alt="Logo">
+                <span>SGE Estoqly</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item"><a href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+                <li class="sidebar-item"><a href="fornecedores.html"><i class="fa-solid fa-truck"></i> Consultar Fornecedor</a></li>
+                <li class="sidebar-item"><a href="cad-produto.html"><i class="fa-solid fa-box"></i> Cadastrar Produto</a></li>
+                <li class="sidebar-item active"><a href="produtos.html"><i class="fa-solid fa-box"></i> Consultar Produtos</a></li>                            
+                <li class="sidebar-item"><a href="ent-produto.html"><i class="fa-solid fa-circle-arrow-down"></i> Entrada de Estoque</a></li>
+                <li class="sidebar-item"><a href="sai-produto.html"><i class="fa-solid fa-circle-arrow-up"></i> Saída de Estoque</a></li>
+                <li class="sidebar-item"><a href="cad-pedidos.html"><i class="fa-solid fa-file-invoice-dollar"></i> Novo Pedido</a></li>
+                <li class="sidebar-item"><a href="pedidos.html"><i class="fa-solid fa-list-check"></i> Gerenciar Pedidos</a></li>
+                <li class="sidebar-item"><a href="movimentacoes.html"><i class="fa-solid fa-clock-rotate-left"></i> Movimentações</a></li>
+                <li class="sidebar-item"><a href="exclusoes.html"><i class="fa-solid fa-trash-can"></i> Histórico de Exclusões</a></li> </ul>
+            <div class="sidebar-status-plano">
+                <i id="statusPlanoIcone" class="fa-solid fa-circle-check"></i>
+                <span>Plano: <strong id="statusPlanoTexto">Verificando...</strong></span>
+            </div>
+            <div class="sidebar-item logout-btn"><a onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></div>
+        </sidebar>
+        <main>
+            <h2>Consulta de Produtos em Estoque</h2>
+
+            <div class="filters-container">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="filter-produto">Selecionar Produto</label>
+                    <select id="filter-produto" class="form-control" style="margin-top: 0.5rem;">
+                        <option value="">Carregando produtos...</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="filter-fornecedor">Selecionar Fornecedor</label>
+                    <select id="filter-fornecedor" class="form-control" style="margin-top: 0.5rem;">
+                        <option value="">Carregando fornecedores...</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="filter-stock">Status do Estoque</label>
+                    <select id="filter-stock" class="form-control" style="margin-top: 0.5rem;">
+                        <option value="">Todos os Níveis</option>
+                        <option value="normal">Estoque Normal</option>
+                        <option value="baixo">Estoque Baixo (≤ Mínimo)</option>
+                        <option value="zerado">Estoque Zerado</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="filter-vencimento">Situação do Vencimento</label>
+                    <select id="filter-vencimento" class="form-control" style="margin-top: 0.5rem;">
+                        <option value="">Todos os Vencimentos</option>
+                        <option value="critico">Crítico (≤ 30 dias / Vencidos)</option>
+                        <option value="alerta">Alerta (&lt; 2 Meses)</option>
+                        <option value="normal">No Prazo (&gt; 2 Meses)</option>
+                        <option value="sem_validade">Não Consta</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome do Produto</th>
+                            <th>Fornecedor Padrão</th>
+                            <th>Lote</th>
+                            <th>Preço Unitário</th>
+                            <th>Qtd. Atual</th>
+                            <th>Qtd. Mínima</th>
+                            <th style="text-align: center;">Validade</th> 
+                            <th style="text-align: center;">Status</th>
+                            <th style="text-align: center;">Ações</th> </tr>
+                    </thead>
+                    <tbody id="table-products-body">
+                        <tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Carregando catálogo de produtos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-exclusao" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px;">
+            <span class="modal-icon danger"><i class="fa-solid fa-trash-can"></i></span>
+            <h3>Justificar Exclusão</h3>
+            <p style="margin: 0.5rem 0 1.5rem 0; color: #94a3b8; font-size: 0.95rem;">
+                Você está excluindo o produto: <strong id="nome-produto-excluir" style="color: #f8fafc;"></strong>
+            </p>
+            
+            <div class="form-group" style="text-align: left;">
+                <label for="motivo-exclusao" style="display: block; margin-bottom: 0.5rem; color: #94a3b8; font-size: 0.9rem;">Motivo / Justificativa <span style="color: #ef4444;">*</span></label>
+                <textarea id="motivo-exclusao" class="form-control" rows="3" placeholder="Por que este produto está sendo excluído?" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 6px; padding: 0.5rem; resize: none; font-family: inherit;"></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="button" id="btn-cancelar-exclusao" class="modal-btn" style="background: #475569; margin-top: 0;">Cancelar</button>
+                <button type="button" id="btn-confirmar-exclusao" class="modal-btn" style="background: #ef4444; margin-top: 0;">Confirmar Exclusão</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-exclusao-sucesso" class="modal-overlay" style="z-index: 10001;">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="modal-icon success"><i class="fa-solid fa-circle-check"></i></span>
+            <h3>Exclusão Confirmada!</h3>
+            <p id="mensagem-exclusao-sucesso" style="margin: 0.5rem 0 1.5rem 0; color: #94a3b8; font-size: 0.95rem;">
+                O produto foi excluído com sucesso e o registro de auditoria foi gerado.
+            </p>
+            <button type="button" id="btn-fechar-sucesso" class="modal-btn" style="background-color: #10b981; margin-top: 0;">Ok</button>
+        </div>
+    </div>
+
+    <div id="custom-modal" class="modal-overlay" style="z-index: 10000;">
+        <div class="modal-content">
+            <span id="modal-icon" class="modal-icon danger"><i class="fa-solid fa-circle-xmark"></i></span>
+            <h3 id="modal-title">Erro</h3>
+            <p id="modal-message"></p>
+            <button type="button" id="modal-btn-close" class="modal-btn">Ok</button>
+        </div>
+    </div>
+
+    <div id="modalSessaoBloqueada" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h2>Assinatura Suspensa</h2>
+            <p>Sua assinatura expirou ou foi desativada pelo administrador. Para continuar utilizando o <strong>SGE Estoqly</strong>, regularize seu plano.</p>
+            <button id="btnModalSair" class="modal-btn">Voltar para a Tela de Login</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        let listaProdutosGeral = [];
+        let produtoParaExcluir = null; 
+
+        window.addEventListener('DOMContentLoaded', carregarDadosIniciais);
+
+        document.getElementById('filter-produto').addEventListener('change', aplicarFiltros);
+        document.getElementById('filter-fornecedor').addEventListener('change', aplicarFiltros);
+        document.getElementById('filter-stock').addEventListener('change', aplicarFiltros);
+        document.getElementById('filter-vencimento').addEventListener('change', aplicarFiltros);
+
+        function exibirErro(mensagem, titulo = "Erro") {
+            document.getElementById('modal-title').innerText = titulo;
+            document.getElementById('modal-message').innerText = message;
+            document.getElementById('custom-modal').classList.add('active');
+        }
+
+        document.getElementById('modal-btn-close').addEventListener('click', () => {
+            document.getElementById('custom-modal').classList.remove('active');
+        });
+
+        // Fechar o modal de exclusão bem-sucedida e recarregar dados
+        document.getElementById('btn-fechar-sucesso').addEventListener('click', () => {
+            document.getElementById('modal-exclusao-sucesso').classList.remove('active');
+        });
+
+        document.getElementById('btn-cancelar-exclusao').addEventListener('click', fecharModalExclusao);
+        document.getElementById('btn-confirmar-exclusao').addEventListener('click', processarExclusao);
+
+        async function carregarDadosIniciais() {
+            try {
+                const [produtos, fornecedores] = await Promise.all([
+                    db.call({ action: "getProducts" }),
+                    db.call({ action: "getSuppliers" })
+                ]);
+                
+                const selectProd = document.getElementById('filter-produto');
+                if (produtos && produtos.length > 0) {
+                    listaProdutosGeral = produtos;
+                    selectProd.innerHTML = '<option value="">Todos os Produtos</option>' + 
+                        produtos.map(p => `<option value="${p.nome}">${p.nome}</option>`).join('');
+                } else {
+                    selectProd.innerHTML = '<option value="">Nenhum produto cadastrado</option>';
+                }
+
+                const selectForn = document.getElementById('filter-fornecedor');
+                if (fornecedores && fornecedores.length > 0) {
+                    selectForn.innerHTML = '<option value="">Todos os Fornecedores</option>' + 
+                        fornecedores.map(f => `<option value="${f.nome}">${f.nome}</option>`).join('');
+                } else {
+                    selectForn.innerHTML = '<option value="">Nenhum fornecedor cadastrado</option>';
+                }
+
+                aplicarFiltros();
+            } catch (error) {
+                exibirErro("Erro na comunicação com o banco de dados: " + error.message);
+            }
+        }
+
+        /* --- CORREÇÃO: Função parsearData robusta --- */
+        function parsearData(dataVenc) {
+            if (!dataVenc || dataVenc === "null" || dataVenc === "undefined" || dataVenc.toString().trim() === "") {
+                return null;
+            }
+
+            let dataFim = null;
+            const strData = dataVenc.toString().trim();
+
+            if (strData.includes('/')) {
+                const partes = strData.split('/');
+                if (partes.length === 3) {
+                    dataFim = new Date(parseInt(partes[2], 10), parseInt(partes[1], 10) - 1, parseInt(partes[0], 10));
+                }
+            } else if (strData.includes('-')) {
+                const partes = strData.split('T')[0].split('-');
+                if (partes.length === 3) {
+                    dataFim = new Date(parseInt(partes[0], 10), parseInt(partes[1], 10) - 1, parseInt(partes[2], 10));
+                }
+            }
+
+            if (!dataFim || isNaN(dataFim.getTime())) {
+                dataFim = new Date(strData);
+            }
+
+            if (isNaN(dataFim.getTime())) {
+                return null;
+            }
+
+            dataFim.setHours(0, 0, 0, 0);
+            return dataFim;
+        }
+
+        function aplicarFiltros() {
+            const produtoSelecionado = document.getElementById('filter-produto').value;
+            const fornecedorSelecionado = document.getElementById('filter-fornecedor').value;
+            const nivelEstoque = document.getElementById('filter-stock').value;
+            const situacaoVencimento = document.getElementById('filter-vencimento').value;
+
+            const produtosFiltrados = listaProdutosGeral.filter(p => {
+                const bateProduto = produtoSelecionado === "" || p.nome === produtoSelecionado;
+                const bateFornecedor = fornecedorSelecionado === "" || (p.fornecedor && p.fornecedor === fornecedorSelecionado);
+
+                let bateEstoque = true;
+                const qtd = Number(p.estoque || 0);
+                const min = Number(p.min || 0);
+
+                if (nivelEstoque === 'normal') {
+                    bateEstoque = (qtd > min);
+                } else if (nivelEstoque === 'baixo') {
+                    bateEstoque = (qtd <= min && qtd > 0);
+                } else if (nivelEstoque === 'zerado') {
+                    bateEstoque = (qtd === 0);
+                }
+
+                let bateVencimento = true;
+                if (situacaoVencimento !== "") {
+                    const dataFim = parsearData(p.vencimento);
+
+                    if (situacaoVencimento === 'sem_validade') {
+                        bateVencimento = (dataFim === null);
+                    } else if (dataFim === null) {
+                        bateVencimento = false;
+                    } else {
+                        const hoje = new Date();
+                        hoje.setHours(0, 0, 0, 0);
+                        
+                        const diffTempo = dataFim - hoje;
+                        const diffDias = Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
+
+                        if (situacaoVencimento === 'critico') {
+                            bateVencimento = (diffDias <= 30);
+                        } else if (situacaoVencimento === 'alerta') {
+                            bateVencimento = (diffDias > 30 && diffDias <= 60);
+                        } else if (situacaoVencimento === 'normal') {
+                            bateVencimento = (diffDias > 60);
+                        }
+                    }
+                }
+
+                return bateProduto && bateFornecedor && bateEstoque && bateVencimento;
+            });
+
+            renderizarTabela(produtosFiltrados);
+        }
+
+        function renderizarTabela(dados) {
+            const tbody = document.getElementById('table-products-body');
+            
+            if (dados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted);">Nenhum produto corresponde aos filtros aplicados.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = dados.map(p => {
+                const precoFormatado = Number(p.preco || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                const qtd = Number(p.estoque || 0);
+                const min = Number(p.min || 0);
+                
+                let badgeClass = 'badge-success';
+                let statusTexto = 'Normal';
+
+                if (qtd === 0) {
+                    badgeClass = 'badge-danger';
+                    statusTexto = 'Zerado';
+                } else if (qtd <= min) {
+                    badgeClass = 'badge-warning';
+                    statusTexto = 'Alerta Baixo';
+                }
+
+                const nomeEscapado = p.nome.replace(/'/g, "\\'");
+
+                return `
+                    <tr>
+                        <td><code>${p.id}</code></td>
+                        <td><strong>${p.nome}</strong></td>
+                        <td>${p.fornecedor || 'Não Informado'}</td>
+                        <td>${p.lote || '<span style="color: #64748b;">-</span>'}</td>
+                        <td>${precoFormatado}</td>
+                        <td>${qtd} un</td>
+                        <td>${min} un</td>
+                        <td style="text-align: center;">
+                            ${gerarBadgeVencimento(p.vencimento)}
+                        </td>
+                        <td style="text-align: center;">
+                            <span class="badge ${badgeClass}">${statusTexto}</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <button class="btn-delete" onclick="abrirModalExclusao('${p.id}', '${nomeEscapado}')" title="Excluir Produto">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function gerarBadgeVencimento(dataVenc) {
+            const dataFim = parsearData(dataVenc);
+            if (!dataFim) {
+                return `<span style="background: rgba(100, 116, 139, 0.2); color: #94a3b8; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">Não Consta</span>`;
+            }
+
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+
+            const diffTempo = dataFim - hoje;
+            const diffDias = Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
+            const dataBR = dataFim.toLocaleDateString('pt-BR');
+
+            if (diffDias <= 30) {
+                const texto = diffDias <= 0 ? "VENCIDO!" : `Crítico (${diffDias} dias)`;
+                return `<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: bold; font-size: 0.8rem;" title="Vence em: ${dataBR}"><i class="fa-solid fa-triangle-exclamation"></i> ${texto}</span>`;
+            } 
+            else if (diffDias <= 60) {
+                return `<span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: bold; font-size: 0.8rem;" title="Vence em: ${dataBR}"><i class="fa-solid fa-clock"></i> < 2 Meses</span>`;
+            } 
+            else {
+                return `<span style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">${dataBR}</span>`;
+            }
+        }
+
+        /* --- LÓGICA DE EXCLUSÃO --- */
+
+        function abrirModalExclusao(id, nome) {
+            produtoParaExcluir = { id, nome };
+            document.getElementById('nome-produto-excluir').innerText = nome;
+            document.getElementById('motivo-exclusao').value = ''; 
+            document.getElementById('modal-exclusao').classList.add('active');
+        }
+
+        function fecharModalExclusao() {
+            document.getElementById('modal-exclusao').classList.remove('active');
+            produtoParaExcluir = null;
+        }
+
+        async function processarExclusao() {
+            if (!produtoParaExcluir) return;
+
+            const motivo = document.getElementById('motivo-exclusao').value.trim();
+            if (!motivo) {
+                exibirErro("Por favor, digite o motivo da exclusão.", "Atenção");
+                return;
+            }
+
+            // --- CORREÇÃO: Busca a chave correta salva no login ---
+            const usuarioResponsavel = localStorage.getItem('sge_session') || 'Usuário Desconhecido';
+
+            try {
+                document.getElementById('btn-confirmar-exclusao').disabled = true;
+                document.getElementById('btn-confirmar-exclusao').innerText = "Processando...";
+
+                const resposta = await db.call({
+                    action: "excludeProduct",
+                    id: produtoParaExcluir.id,
+                    motivo: motivo,
+                    usuario: usuarioResponsavel // Agora envia o nome correto que veio do login
+                });
+
+                if (resposta && resposta.success) {
+                    const nomeProdutoSalvo = produtoParaExcluir.nome;
+                    fecharModalExclusao();
+                    
+                    // Exibe o novo modal de sucesso de exclusão informando o produto removido
+                    document.getElementById('mensagem-exclusao-sucesso').innerHTML = `O produto <strong>"${nomeProdutoSalvo}"</strong> foi excluído com sucesso e arquivado para auditoria.`;
+                    document.getElementById('modal-exclusao-sucesso').classList.add('active');
+                    
+                    await carregarDadosIniciais();
+                } else {
+                    throw new Error(resposta.message || "Erro desconhecido ao excluir.");
+                }
+            } catch (error) {
+                exibirErro("Falha ao processar a exclusão do produto: " + error.message);
+            } finally {
+                document.getElementById('btn-confirmar-exclusao').disabled = false;
+                document.getElementById('btn-confirmar-exclusao').innerText = "Confirmar Exclusão";
+            }
+        }
+
+        /* --- VERIFICAÇÃO ATIVA DO PLANO --- */
+        document.addEventListener("DOMContentLoaded", async function() {
+            const elementoTexto = document.getElementById('statusPlanoTexto');
+            const elementoIcone = document.getElementById('statusPlanoIcone');
+            
+            function atualizarInterfacePlano(status) {
+                if (!elementoTexto || !elementoIcone) return;
+                
+                if (status.trim().toLowerCase() === 'ativo') {
+                    elementoTexto.textContent = 'Ativo';
+                    elementoTexto.className = 'status-ativo';
+                    elementoIcone.className = 'fa-solid fa-circle-check status-ativo';
+                } else {
+                    elementoTexto.textContent = 'Inativo';
+                    elementoTexto.className = 'status-inativo';
+                    elementoIcone.className = 'fa-solid fa-circle-xmark status-inativo';
+                }
+            }
+
+            function forçarLogout() {
+                localStorage.clear(); 
+                window.location.href = 'index.html';
+            }
+
+            let statusAtual = localStorage.getItem('sge_plano_status') || 'Inativo';
+            atualizarInterfacePlano(statusAtual);
+
+            if (statusAtual.trim().toLowerCase() !== 'ativo') {
+                forçarLogout();
+                return;
+            }
+
+            const spreadsheetId = localStorage.getItem('sge_spreadsheet_id');
+            if (!spreadsheetId) {
+                forçarLogout();
+                return;
+            }
+
+            try {
+                const result = await db.call({
+                    action: "verificarStatus",
+                    spreadsheetId: spreadsheetId
+                });
+
+                if (result && result.success) {
+                    const statusPlanilha = result.plano || 'Inativo';
+                    
+                    localStorage.setItem('sge_plano_status', statusPlanilha);
+                    atualizarInterfacePlano(statusPlanilha);
+                    
+                    if (statusPlanilha.trim().toLowerCase() !== 'ativo') {
+                        const modal = document.getElementById('modalSessaoBloqueada');
+                        const btnSair = document.getElementById('btnModalSair');
+                        
+                        if (modal && btnSair) {
+                            modal.classList.add('mostrar');
+                            
+                            btnSair.addEventListener('click', function() {
+                                forçarLogout();
+                            });
+                            
+                            setTimeout(forçarLogout, 10000);
+                        } else {
+                            forçarLogout();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Falha ao sincronizar status do plano:", error);
+            }
+        });
+    </script>
+</body>
+</html>

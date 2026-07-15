@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGE - Cadastrar Fornecedor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* --- ESTILIZAÇÃO UNIFICADA DOS MODAIS --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        /* Suporta as classes .active (novo modal) e .mostrar (modal de bloqueio) */
+        .modal-overlay.active, 
+        .modal-overlay.mostrar { 
+            opacity: 1; 
+            pointer-events: auto; 
+        }
+        
+        .modal-content, 
+        .modal-container {
+            background: #1e293b; 
+            border: 1px solid #334155; 
+            padding: 2.2rem;
+            border-radius: 12px; 
+            width: 90%; 
+            max-width: 400px; 
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9); 
+            transition: transform 0.3s ease; 
+            color: #f8fafc;
+        }
+        
+        .modal-overlay.active .modal-content,
+        .modal-overlay.mostrar .modal-container { 
+            transform: scale(1); 
+        }
+        
+        .modal-icon { 
+            font-size: 3.5rem; 
+            margin-bottom: 1.2rem; 
+            display: block; 
+        }
+        .modal-icon.success { color: #10b981; }
+        .modal-icon.danger { color: #ef4444; }
+        .modal-icon.warning { color: #f59e0b; }
+
+        .modal-btn {
+            padding: 0.6rem 1.5rem; 
+            font-size: 1rem; 
+            font-weight: 500; 
+            cursor: pointer;
+            border: none; 
+            border-radius: 6px; 
+            color: white; 
+            width: 100%; 
+            margin-top: 1.5rem;
+            transition: background 0.2s; 
+            background-color: #3b82f6;
+        }
+        .modal-btn:hover { 
+            background-color: #2563eb; 
+        }
+
+        /* --- ESTILIZAÇÃO DE VALIDAÇÃO DOS CAMPOS --- */
+        .error-feedback {
+            color: #ef4444;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+            text-align: left;
+            font-weight: 500;
+        }
+        .error-feedback.active {
+            display: block;
+        }
+        .form-control.invalid-field {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 1px #ef4444 !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <sidebar>
+            <div class="sidebar-brand">
+                <img src="logo.png" class="logo-sistema" alt="Logo">
+                <span>SGE Estoqly</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item"><a href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+                <li class="sidebar-item active"><a href="fornecedores.html"><i class="fa-solid fa-truck"></i> Cadastrar Fornecedor</a></li>
+                <li class="sidebar-item"><a href="cad-produto.html"><i class="fa-solid fa-box"></i> Cadastrar Produto</a></li>
+                <li class="sidebar-item"><a href="produtos.html"><i class="fa-solid fa-box"></i> Consultar Produtos</a></li>                            
+                <li class="sidebar-item"><a href="ent-produto.html"><i class="fa-solid fa-circle-arrow-down"></i> Entrada de Estoque</a></li>
+                <li class="sidebar-item"><a href="sai-produto.html"><i class="fa-solid fa-circle-arrow-up"></i> Saída de Estoque</a></li>
+                <li class="sidebar-item"><a href="cad-pedidos.html"><i class="fa-solid fa-file-invoice-dollar"></i> Novo Pedido</a></li>
+                <li class="sidebar-item"><a href="pedidos.html"><i class="fa-solid fa-list-check"></i> Gerenciar Pedidos</a></li>
+                <li class="sidebar-item"><a href="movimentacoes.html"><i class="fa-solid fa-clock-rotate-left"></i> Movimentações</a></li>
+                <li class="sidebar-item"><a href="exclusoes.html"><i class="fa-solid fa-trash-can"></i> Histórico de Exclusões</a></li> </ul>
+            </ul>
+            <div class="sidebar-status-plano">
+                <i id="statusPlanoIcone" class="fa-solid fa-circle-check"></i>
+                <span>Plano: <strong id="statusPlanoTexto">Verificando...</strong></span>
+            </div>
+            <div class="sidebar-item logout-btn"><a onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></div>
+        </sidebar>
+
+        <main>
+            <h2>Cadastro de Fornecedor</h2>
+            <form id="form-fornecedor" onsubmit="saveSupplier(event)" class="form-grid" novalidate>
+                <div class="form-group">
+                    <label>Razão Social / Nome</label>
+                    <input type="text" id="f-nome" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>CNPJ / CPF</label>
+                    <input type="text" id="f-documento" class="form-control" placeholder="000.000.000-00 ou 00.000.000/0000-00" required>
+                    <span class="error-feedback" id="err-documento">Insira um CPF ou CNPJ válido.</span>
+                </div>
+                <div class="form-group">
+                    <label>Telefone de Contato</label>
+                    <input type="tel" id="f-telefone" class="form-control" placeholder="(00) 00000-0000">
+                    <span class="error-feedback" id="err-telefone">Insira um telefone válido com DDD.</span>
+                </div>
+                <div class="form-group">
+                    <label>E-mail</label>
+                    <input type="email" id="f-email" class="form-control" placeholder="exemplo@email.com">
+                    <span class="error-feedback" id="err-email">Insira um endereço de e-mail válido.</span>
+                </div>
+                <div class="form-footer">
+                    <button type="submit" id="btn-save-supplier" class="btn"><i class="fa-solid fa-floppy-disk"></i> Salvar Fornecedor</button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <div id="modalSessaoBloqueada" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-icon warning">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h2>Assinatura Suspensa</h2>
+            <p>Sua assinatura expirou ou foi desativada pelo administrador. Para continuar utilizando o <strong>SGE Estoqly</strong>, regularize seu plano.</p>
+            <button id="btnModalSair" class="modal-btn">Voltar para a Tela de Login</button>
+        </div>
+    </div>
+
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-content">
+            <span id="modal-icon" class="modal-icon"></span>
+            <h3 id="modal-title" style="margin-bottom: 0.5rem; font-size: 1.4rem;"></h3>
+            <p id="modal-message" style="color: #94a3b8; line-height: 1.5;"></p>
+            <button type="button" id="modal-btn-close" class="modal-btn" onclick="fecharModal()">Ok</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        let urlRedirecionamento = null;
+
+        // FUNÇÕES DE GERENCIAMENTO DO NOVO MODAL
+        function chamarModal(titulo, message, tipo = 'success', redirectUrl = null) {
+            const modal = document.getElementById('custom-modal');
+            const iconEl = document.getElementById('modal-icon');
+            
+            urlRedirecionamento = redirectUrl;
+            
+            document.getElementById('modal-title').innerText = titulo;
+            document.getElementById('modal-message').innerText = message;
+
+            iconEl.className = 'modal-icon';
+            if (tipo === 'success') {
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                iconEl.classList.add('success');
+            } else if (tipo === 'danger') {
+                iconEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+                iconEl.classList.add('danger');
+            } else {
+                iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                iconEl.classList.add('warning');
+            }
+
+            modal.classList.add('active');
+        }
+
+        function fecharModal() {
+            document.getElementById('custom-modal').classList.remove('active');
+            if (urlRedirecionamento) {
+                window.location.href = urlRedirecionamento;
+            }
+        }
+
+        /* --- MÁSCARAS EM TEMPO REAL --- */
+        function aplicarMascaraDocumento(v) {
+            v = v.replace(/\D/g, ""); // Remove tudo que não é dígito
+            if (v.length <= 11) {
+                // CPF
+                v = v.replace(/(\d{3})(\d)/, "$1.$2");
+                v = v.replace(/(\d{3})(\d)/, "$1.$2");
+                v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+            } else {
+                // CNPJ
+                v = v.slice(0, 14);
+                v = v.replace(/^(\d{2})(\d)/, "$1.$2");
+                v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+                v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
+                v = v.replace(/(\d{4})(\d)/, "$1-$2");
+            }
+            return v;
+        }
+
+        function aplicarMascaraTelefone(v) {
+            v = v.replace(/\D/g, ""); 
+            v = v.slice(0, 11); // Limita a 11 dígitos
+            v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); 
+            if (v.length > 9) {
+                v = v.replace(/(\d{5})(\d)/, "$1-$2"); // Celular
+            } else {
+                v = v.replace(/(\d{4})(\d)/, "$1-$2"); // Fixo
+            }
+            return v;
+        }
+
+        // Eventos de escuta para aplicar as máscaras enquanto digita
+        document.getElementById('f-documento').addEventListener('input', (e) => {
+            e.target.value = aplicarMascaraDocumento(e.target.value);
+            limparErroVisual(e.target, document.getElementById('err-documento'));
+        });
+
+        document.getElementById('f-telefone').addEventListener('input', (e) => {
+            e.target.value = aplicarMascaraTelefone(e.target.value);
+            limparErroVisual(e.target, document.getElementById('err-telefone'));
+        });
+
+        document.getElementById('f-email').addEventListener('input', (e) => {
+            limparErroVisual(e.target, document.getElementById('err-email'));
+        });
+
+        /* --- VALIDADOES DE FORMATO E INTEGRIDADE --- */
+        function validarCPF(cpf) {
+            cpf = cpf.replace(/[^\d]+/g, '');
+            if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+            
+            let soma = 0, resto;
+            for (let i = 1; i <= 9; i++) soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+            resto = (soma * 10) % 11;
+            if ((resto === 10) || (resto === 11)) resto = 0;
+            if (resto !== parseInt(cpf.substring(9, 10))) return false;
+            
+            soma = 0;
+            for (let i = 1; i <= 10; i++) soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+            resto = (soma * 10) % 11;
+            if ((resto === 10) || (resto === 11)) resto = 0;
+            if (resto !== parseInt(cpf.substring(10, 11))) return false;
+            
+            return true;
+        }
+
+        function validarCNPJ(cnpj) {
+            cnpj = cnpj.replace(/[^\d]+/g, '');
+            if (cnpj.length !== 14 || /^(\d)\1{13}$/.test(cnpj)) return false;
+            
+            let tamanho = cnpj.length - 2;
+            let numeros = cnpj.substring(0, tamanho);
+            let digitos = cnpj.substring(tamanho);
+            let soma = 0;
+            let pos = tamanho - 7;
+            for (let i = tamanho; i >= 1; i--) {
+                soma += numeros.charAt(tamanho - i) * pos--;
+                if (pos < 2) pos = 9;
+            }
+            let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+            if (resultado !== parseInt(digitos.charAt(0))) return false;
+            
+            tamanho = tamanho + 1;
+            numeros = cnpj.substring(0, tamanho);
+            soma = 0;
+            pos = tamanho - 7;
+            for (let i = tamanho; i >= 1; i--) {
+                soma += numeros.charAt(tamanho - i) * pos--;
+                if (pos < 2) pos = 9;
+            }
+            resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+            if (resultado !== parseInt(digitos.charAt(1))) return false;
+            
+            return true;
+        }
+
+        function validarEmail(email) {
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return regex.test(email);
+        }
+
+        function validarTelefone(tel) {
+            const numeros = tel.replace(/[^\d]+/g, '');
+            // Telefones válidos no Brasil possuem 10 (fixo) ou 11 (celular) dígitos com DDD
+            return numeros.length === 10 || numeros.length === 11;
+        }
+
+        // Funções de manipulação visual dos erros
+        function mostrarErroVisual(input, element, mensagem) {
+            input.classList.add('invalid-field');
+            element.textContent = mensagem;
+            element.classList.add('active');
+        }
+
+        function limparErroVisual(input, element) {
+            input.classList.remove('invalid-field');
+            element.classList.remove('active');
+        }
+
+        // SALVAR FORNECEDOR COM CONTRATO DE VALIDAÇÃO
+        async function saveSupplier(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('btn-save-supplier');
+            
+            const inputDoc = document.getElementById('f-documento');
+            const errDoc = document.getElementById('err-documento');
+            const docLimpo = inputDoc.value.replace(/[^\d]+/g, '');
+
+            const inputTel = document.getElementById('f-telefone');
+            const errTel = document.getElementById('err-telefone');
+            const telLimpo = inputTel.value.replace(/[^\d]+/g, '');
+
+            const inputEmail = document.getElementById('f-email');
+            const errEmail = document.getElementById('err-email');
+            const emailValor = inputEmail.value.trim();
+
+            let formularioValido = true;
+
+            // 1. Validar CPF/CNPJ
+            if (docLimpo.length === 11) {
+                if (!validarCPF(docLimpo)) {
+                    mostrarErroVisual(inputDoc, errDoc, "O número de CPF informado é inválido.");
+                    formularioValido = false;
+                } else {
+                    limparErroVisual(inputDoc, errDoc);
+                }
+            } else if (docLimpo.length === 14) {
+                if (!validarCNPJ(docLimpo)) {
+                    mostrarErroVisual(inputDoc, errDoc, "O número de CNPJ informado é inválido.");
+                    formularioValido = false;
+                } else {
+                    limparErroVisual(inputDoc, errDoc);
+                }
+            } else {
+                mostrarErroVisual(inputDoc, errDoc, "Insira um documento válido (11 dígitos para CPF ou 14 para CNPJ).");
+                formularioValido = false;
+            }
+
+            // 2. Validar Telefone (opcional, mas se preenchido precisa estar correto)
+            if (telLimpo.length > 0) {
+                if (!validarTelefone(telLimpo)) {
+                    mostrarErroVisual(inputTel, errTel, "Insira um número válido com DDD (ex: 10 ou 11 dígitos).");
+                    formularioValido = false;
+                } else {
+                    limparErroVisual(inputTel, errTel);
+                }
+            } else {
+                limparErroVisual(inputTel, errTel);
+            }
+
+            // 3. Validar E-mail (opcional, mas se preenchido precisa estar correto)
+            if (emailValor.length > 0) {
+                if (!validarEmail(emailValor)) {
+                    mostrarErroVisual(inputEmail, errEmail, "Formato de e-mail inválido. Ex: nome@provedor.com");
+                    formularioValido = false;
+                } else {
+                    limparErroVisual(inputEmail, errEmail);
+                }
+            } else {
+                limparErroVisual(inputEmail, errEmail);
+            }
+
+            // Se falhar em qualquer validação, interrompe o salvamento
+            if (!formularioValido) {
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Salvando...";
+
+            const payload = {
+                action: "saveSupplier",
+                id: "F" + Date.now(),
+                nome: document.getElementById('f-nome').value,
+                documento: inputDoc.value, // Envia com a máscara aplicada
+                telefone: inputTel.value,   // Envia com a máscara aplicada
+                email: emailValor
+            };
+
+            try {
+                const res = await db.call(payload);
+
+                if (res && res.success) {
+                    chamarModal('Sucesso!', 'Fornecedor salvo com sucesso na sua planilha!', 'success', 'fornecedores.html');
+                } else {
+                    chamarModal('Erro', 'Erro ao salvar o fornecedor na nuvem.', 'danger');
+                    btn.disabled = false;
+                    btn.innerText = "Salvar Fornecedor";
+                }
+            } catch (error) {
+                console.error("Erro na requisição:", error);
+                chamarModal('Erro', 'Falha na comunicação com o banco de dados.', 'danger');
+                btn.disabled = false;
+                btn.innerText = "Salvar Fornecedor";
+            }
+        }
+
+        // COMPORTAMENTO DA SESSÃO / VERIFICAÇÃO DE PLANO
+        document.addEventListener("DOMContentLoaded", async function() {
+            const elementoTexto = document.getElementById('statusPlanoTexto');
+            const elementoIcone = document.getElementById('statusPlanoIcone');
+            
+            function atualizarInterfacePlano(status) {
+                if (!elementoTexto || !elementoIcone) return;
+                
+                if (status.trim().toLowerCase() === 'ativo') {
+                    elementoTexto.textContent = 'Ativo';
+                    elementoTexto.className = 'status-ativo';
+                    elementoIcone.className = 'fa-solid fa-circle-check status-ativo';
+                } else {
+                    elementoTexto.textContent = 'Inativo';
+                    elementoTexto.className = 'status-inativo';
+                    elementoIcone.className = 'fa-solid fa-circle-xmark status-inativo';
+                }
+            }
+
+            function forçarLogout() {
+                localStorage.clear(); 
+                window.location.href = 'index.html'; 
+            }
+
+            let statusAtual = localStorage.getItem('sge_plano_status') || 'Inativo';
+            atualizarInterfacePlano(statusAtual);
+
+            if (statusAtual.trim().toLowerCase() !== 'ativo') {
+                forçarLogout();
+                return;
+            }
+
+            const spreadsheetId = localStorage.getItem('sge_spreadsheet_id');
+            if (!spreadsheetId) {
+                forçarLogout();
+                return;
+            }
+
+            try {
+                const result = await db.call({
+                    action: "verificarStatus",
+                    spreadsheetId: spreadsheetId
+                });
+
+                if (result && result.success) {
+                    const statusPlanilha = result.plano || 'Inativo';
+                    
+                    localStorage.setItem('sge_plano_status', statusPlanilha);
+                    atualizarInterfacePlano(statusPlanilha);
+                    
+                    if (statusPlanilha.trim().toLowerCase() !== 'ativo') {
+                        const modal = document.getElementById('modalSessaoBloqueada');
+                        const btnSair = document.getElementById('btnModalSair');
+                        
+                        if (modal && btnSair) {
+                            modal.classList.add('mostrar');
+                            
+                            btnSair.addEventListener('click', function() {
+                                forçarLogout();
+                            });
+                            
+                            setTimeout(forçarLogout, 10000);
+                        } else {
+                            forçarLogout();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Falha ao sincronizar status do plano:", error);
+            }
+        });
+    </script>
+</body>
+</html>

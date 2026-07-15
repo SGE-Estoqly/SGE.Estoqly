@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGE - Consultar Fornecedores</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .header-acoes {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .busca-container {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+            min-width: 250px;
+        }
+        .busca-container i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #3b82f6; /* Destaque azul no ícone de filtro */
+        }
+        .busca-container select {
+            padding-left: 2.5rem;
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+        .btn-novo-forn {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+        }
+        .btn-novo-forn:hover {
+            background-color: #2563eb;
+        }
+        .tabela-container {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .tabela-sge {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            color: #f8fafc;
+        }
+        .tabela-sge th {
+            background-color: #0f172a;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid #334155;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        .tabela-sge td {
+            padding: 1rem;
+            border-bottom: 1px solid #334155;
+            font-size: 0.9rem;
+            vertical-align: middle;
+        }
+        .tabela-sge tr:last-child td {
+            border-bottom: none;
+        }
+        .tabela-sge tr:hover {
+            background-color: #151f32;
+        }
+        .btn-deletar {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.8rem;
+        }
+        .btn-deletar:hover {
+            background: #dc2626;
+        }
+        .sem-dados {
+            text-align: center;
+            padding: 3rem !important;
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+        .sem-dados i {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        /* --- ESTILIZAÇÃO DO MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: #1e293b; border: 1px solid #334155; padding: 2rem;
+            border-radius: 12px; width: 90%; max-width: 400px; text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9); transition: transform 0.3s ease; color: #f8fafc;
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .modal-icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+        .modal-icon.success { color: #10b981; }
+        .modal-icon.danger { color: #ef4444; }
+        .modal-icon.warning { color: #f59e0b; }
+        .modal-btn {
+            padding: 0.6rem 1.5rem; font-size: 1rem; font-weight: 500; cursor: pointer;
+            border: none; border-radius: 6px; color: white; width: 100%; margin-top: 1.5rem;
+            transition: background 0.2s; background-color: #3b82f6;
+        }
+        .modal-btn:hover { background-color: #2563eb; }
+        
+        .modal-botoes-confirmacao {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .btn-confirm-sim { background-color: #ef4444; flex: 1; }
+        .btn-confirm-sim:hover { background-color: #dc2626; }
+        .btn-confirm-nao { background-color: #475569; flex: 1; }
+        .btn-confirm-nao:hover { background-color: #334155; }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <sidebar>
+            <div class="sidebar-brand">
+                <img src="logo.png" class="logo-sistema" alt="Logo">
+                <span>SGE Estoqly</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item"><a href="dashboard.html"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+                <li class="sidebar-item active"><a href="fornecedores.html"><i class="fa-solid fa-address-book"></i> Consultar Fornecedores</a></li>
+                <li class="sidebar-item"><a href="cad-produto.html"><i class="fa-solid fa-box"></i> Cadastrar Produto</a></li>
+                <li class="sidebar-item"><a href="produtos.html"><i class="fa-solid fa-box"></i> Consultar Produtos</a></li>                                
+                <li class="sidebar-item"><a href="ent-produto.html"><i class="fa-solid fa-circle-arrow-down"></i> Entrada de Estoque</a></li>
+                <li class="sidebar-item"><a href="sai-produto.html"><i class="fa-solid fa-circle-arrow-up"></i> Saída de Estoque</a></li>
+                <li class="sidebar-item"><a href="cad-pedidos.html"><i class="fa-solid fa-file-invoice-dollar"></i> Novo Pedido</a></li>
+                <li class="sidebar-item"><a href="pedidos.html"><i class="fa-solid fa-list-check"></i> Gerenciar Pedidos</a></li>
+                <li class="sidebar-item"><a href="movimentacoes.html"><i class="fa-solid fa-clock-rotate-left"></i> Movimentações</a></li>
+                <li class="sidebar-item"><a href="exclusoes.html"><i class="fa-solid fa-trash-can"></i> Histórico de Exclusões</a></li> </ul>
+            </ul>
+            <div class="sidebar-status-plano">
+                <i id="statusPlanoIcone" class="fa-solid fa-circle-check"></i>
+                <span>Plano: <strong id="statusPlanoTexto">Verificando...</strong></span>
+            </div>
+            <div class="sidebar-item logout-btn"><a onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></div>
+        </sidebar>
+
+        <main>
+            <h2>Consultar Fornecedores</h2>
+            
+            <div class="header-acoes">
+                <div class="busca-container">
+                    <i class="fa-solid fa-filter"></i>
+                    <select id="select-busca" class="form-control">
+                        <option value="">Carregando fornecedores...</option>
+                    </select>
+                </div>
+                <a href="cad-fornecedor.html" class="btn-novo-forn">
+                    <i class="fa-solid fa-plus"></i> Novo Fornecedor
+                </a>
+            </div>
+
+            <div class="tabela-container">
+                <table class="tabela-sge">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fornecedor / Razão Social</th>
+                            <th>CNPJ / CPF</th>
+                            <th>Telefone</th>
+                            <th>E-mail</th>
+                            <th>Cidade / UF</th>
+                            <th style="text-align: center; width: 100px;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-corpo">
+                        <tr>
+                            <td colspan="7" class="sem-dados">
+                                <i class="fa-solid fa-spinner fa-spin"></i> Carregando fornecedores...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-content">
+            <span id="modal-icon" class="modal-icon"></span>
+            <h3 id="modal-title"></h3>
+            <p id="modal-message"></p>
+            <div id="modal-container-botoes">
+                <button type="button" id="modal-btn-close" class="modal-btn">Ok</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        let todosFornecedores = [];
+        let idParaExcluir = null;
+
+        function chamarModal(titulo, mensagem, tipo = 'success', confirmacao = false) {
+            const modal = document.getElementById('custom-modal');
+            const iconEl = document.getElementById('modal-icon');
+            const botoesContainer = document.getElementById('modal-container-botoes');
+            
+            document.getElementById('modal-title').innerText = titulo;
+            document.getElementById('modal-message').innerText = mensagem;
+
+            iconEl.className = 'modal-icon';
+            if (tipo === 'success') { iconEl.innerHTML = '<i class="fa-solid fa-circle-check"></i>'; iconEl.classList.add('success'); }
+            else if (tipo === 'danger') { iconEl.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>'; iconEl.classList.add('danger'); }
+            else { iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>'; iconEl.classList.add('warning'); }
+
+            if (confirmacao) {
+                botoesContainer.innerHTML = `
+                    <div class="modal-botoes-confirmacao">
+                        <button class="modal-btn btn-confirm-sim" onclick="confirmarExclusao()">Sim, Excluir</button>
+                        <button class="modal-btn btn-confirm-nao" onclick="fecharModal()">Cancelar</button>
+                    </div>
+                `;
+            } else {
+                botoesContainer.innerHTML = `<button type="button" class="modal-btn" onclick="fecharModal()">Ok</button>`;
+            }
+
+            modal.classList.add('active');
+        }
+
+        function fecharModal() {
+            document.getElementById('custom-modal').classList.remove('active');
+            idParaExcluir = null;
+        }
+
+        // 🔄 CARREGAR OS FORNECEDORES DO GOOGLE SHEETS
+        async function carregarFornecedores() {
+            const spreadsheetId = localStorage.getItem('sge_spreadsheet_id');
+            if (!spreadsheetId) return;
+
+            try {
+                const response = await db.call({
+                    action: "getSuppliersList",
+                    spreadsheetId: spreadsheetId
+                });
+
+                const tabelaCorpo = document.getElementById('tabela-corpo');
+
+                if (response && response.success) {
+                    todosFornecedores = response.data || [];
+                    
+                    // Alimenta o Dropdown de Busca dinamicamente
+                    popularDropdownBusca(todosFornecedores);
+                    
+                    // Renderiza a tabela completa por padrão
+                    renderizarTabela(todosFornecedores);
+                } else {
+                    tabelaCorpo.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="sem-dados">
+                                <i class="fa-solid fa-circle-exclamation" style="color:#ef4444;"></i> Erro ao carregar dados do servidor.
+                            </td>
+                        </tr>`;
+                }
+            } catch (error) {
+                console.error("Erro ao buscar fornecedores:", error);
+                document.getElementById('tabela-corpo').innerHTML = `
+                    <tr>
+                        <td colspan="7" class="sem-dados">
+                            <i class="fa-solid fa-circle-exclamation" style="color:#ef4444;"></i> Erro de comunicação com o banco de dados.
+                        </td>
+                    </tr>`;
+            }
+        }
+
+        // POPULAR O SELECT DE FILTRO
+        function popularDropdownBusca(lista) {
+            const selectBusca = document.getElementById('select-busca');
+            selectBusca.innerHTML = '<option value="">🔍 Mostrar Todos os Fornecedores</option>';
+            
+            if (lista.length > 0) {
+                // Ordena alfabeticamente para facilitar a localização visual
+                const listaOrdenada = [...lista].sort((a, b) => a.nome.localeCompare(b.nome));
+                
+                listaOrdenada.forEach(forn => {
+                    selectBusca.innerHTML += `<option value="${forn.id}">${forn.nome}</option>`;
+                });
+            } else {
+                selectBusca.innerHTML = '<option value="">Nenhum fornecedor cadastrado</option>';
+            }
+        }
+
+        // RENDEREZAR AS LINHAS DA TABELA
+        function renderizarTabela(lista) {
+            const tabelaCorpo = document.getElementById('tabela-corpo');
+            tabelaCorpo.innerHTML = '';
+
+            if (lista.length === 0) {
+                tabelaCorpo.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="sem-dados">
+                            <i class="fa-solid fa-folder-open"></i> Nenhum fornecedor encontrado.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            lista.forEach(forn => {
+                tabelaCorpo.innerHTML += `
+                    <tr>
+                        <td><strong>${forn.id}</strong></td>
+                        <td>${forn.nome}</td>
+                        <td>${forn.cnpj || '-'}</td>
+                        <td>${forn.telefone || '-'}</td>
+                        <td>${forn.email || '-'}</td>
+                        <td>${forn.cidadeEstado || '-'}</td>
+                        <td style="text-align: center;">
+                            <button class="btn-deletar" onclick="solicitarExclusao('${forn.id}', '${forn.nome}')">
+                                <i class="fa-solid fa-trash-can"></i> Excluir
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        // 🔄 FILTRO DE BUSCA AO SELECIONAR NO DROP-DOWN (SEM DIGITAR)
+        document.getElementById('select-busca').addEventListener('change', function() {
+            const idSelecionado = this.value;
+            
+            if (idSelecionado === '') {
+                renderizarTabela(todosFornecedores); // Se escolher "Mostrar Todos", exibe a lista cheia
+                return;
+            }
+
+            // Filtra o fornecedor correspondente ao ID selecionado
+            const filtrado = todosFornecedores.filter(forn => forn.id === idSelecionado);
+            renderizarTabela(filtrado);
+        });
+
+        // DELETAR FORNECEDOR
+        function solicitarExclusao(id, nome) {
+            idParaExcluir = id;
+            chamarModal('Atenção!', `Deseja realmente excluir o fornecedor "${nome}"? Esta ação não pode ser desfeita.`, 'warning', true);
+        }
+
+        async function confirmarExclusao() {
+            if (!idParaExcluir) return;
+            
+            // 💡 SOLUÇÃO: Salva o ID em uma variável local ANTES de fechar o modal e limpá-lo
+            const idTemporario = idParaExcluir; 
+            const spreadsheetId = localStorage.getItem('sge_spreadsheet_id');
+            
+            // Agora sim, podemos fechar o modal com segurança
+            fecharModal();
+            
+            document.getElementById('tabela-corpo').innerHTML = `
+                <tr>
+                    <td colspan="7" class="sem-dados">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Excluindo fornecedor...
+                    </td>
+                </tr>`;
+
+            try {
+                const res = await db.call({
+                    action: "deleteSupplier",
+                    spreadsheetId: spreadsheetId,
+                    id: idTemporario // 💡 Passa o ID que salvamos de forma segura
+                });
+
+                if (res && res.success) {
+                    chamarModal('Sucesso!', 'Fornecedor excluído com sucesso.', 'success');
+                } else {
+                    chamarModal('Erro', res.message || 'Erro ao excluir fornecedor.', 'danger');
+                }
+                carregarFornecedores();
+            } catch (err) {
+                chamarModal('Erro', 'Falha de comunicação com o servidor.', 'danger');
+                carregarFornecedores();
+            }
+        }
+
+        // CARREGAMENTO INICIAL E VALIDAÇÃO DE SESSÃO
+        document.addEventListener("DOMContentLoaded", function() {
+            // Validação de assinatura
+            function forçarLogout() { localStorage.clear(); window.location.href = 'index.html'; }
+            let statusAtual = localStorage.getItem('sge_plano_status') || 'Inativo';
+            
+            const elementoTexto = document.getElementById('statusPlanoTexto');
+            const elementoIcone = document.getElementById('statusPlanoIcone');
+            if (elementoTexto && elementoIcone) {
+                if (statusAtual.toLowerCase() === 'ativo') {
+                    elementoTexto.textContent = 'Ativo'; elementoTexto.className = 'status-ativo';
+                    elementoIcone.className = 'fa-solid fa-circle-check status-ativo';
+                } else {
+                    elementoTexto.textContent = 'Inativo'; elementoTexto.className = 'status-inativo';
+                    elementoIcone.className = 'fa-solid fa-circle-xmark status-inativo';
+                }
+            }
+            if (statusAtual.toLowerCase() !== 'ativo') { forçarLogout(); return; }
+
+            // Se logado, busca fornecedores
+            carregarFornecedores();
+        });
+    </script>
+</body>
+</html>
