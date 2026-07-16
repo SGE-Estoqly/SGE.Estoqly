@@ -562,3 +562,40 @@ tr:last-child td {
 }
 .badge-success { background-color: rgba(16, 185, 129, 0.2); color: var(--success); }
 .badge-danger { background-color: rgba(239, 68, 68, 0.2); color: var(--danger); }
+
+/* --- HEADER DA PÁGINA --- */
+.page-header {
+    display: flex;
+    justify-content: space-between; /* Título na esquerda, botão na direita */
+    align-items: center;            /* Alinha os dois verticalmente */
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--bg-accent);
+}
+
+/* Ajuste para o título não ter a borda que tínhamos antes */
+.page-header h2 {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* Estilo do novo botão de Sair no cabeçalho */
+.btn-logout {
+    background: transparent;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-logout:hover {
+    background: var(--danger);
+    color: #ffffff;
+}
