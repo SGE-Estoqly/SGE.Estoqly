@@ -31,11 +31,16 @@
                 <i id="statusPlanoIcone" class="fa-solid fa-circle-check"></i>
                 <span>Plano: <strong id="statusPlanoTexto">Verificando...</strong></span>
             </div>
-            <div class="sidebar-item logout-btn"><a onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sair</a></div>
+            
         </sidebar>
 
         <main>
-            <h2>Dashboard do Estoque</h2>
+            <div class="page-header">
+                <h2>Dashboard do Estoque</h2>
+                   <button class="btn-logout" onclick="handleLogout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Sair
+                </button>
+            </div>
             <div class="metrics-grid">
                 <div class="metric-card">
                     <div class="metric-info">
